@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Cyber Ring -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,18 A36,36 0 1,0 54,90 A36,36 0 1,0 54,18 Z"
+        android:strokeWidth="2.5"
+        android:strokeColor="#00E5FF" />
+
+    <!-- Totem Diamond -->
+    <path
+        android:pathData="M54,26 L78,54 L54,82 L30,54 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="30"
+                android:startY="26"
+                android:endX="78"
+                android:endY="82"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF1E3C" />
+                <item android:offset="0.5" android:color="#00E5FF" />
+                <item android:offset="1.0" android:color="#00FF9D" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Core Cutout -->
+    <path
+        android:fillColor="#FF0D111A"
+        android:pathData="M54,36 L68,54 L54,72 L40,54 Z" />
+
+    <!-- Center Bolt Gem -->
+    <path
+        android:fillColor="#FFFFD700"
+        android:pathData="M56,43 L48,53 L53,53 L51,64 L60,52 L55,52 Z" />
+
+    <!-- Neon Accent Nodes -->
+    <path
+        android:fillColor="#FF00FF9D"
+        android:pathData="M54,14 A4,4 0 1,0 54,22 A4,4 0 1,0 54,14 Z" />
+    <path
+        android:fillColor="#FFFF1E3C"
+        android:pathData="M86,54 A4,4 0 1,0 94,54 A4,4 0 1,0 86,54 Z" />
+    <path
+        android:fillColor="#FF00E5FF"
+        android:pathData="M54,86 A4,4 0 1,0 54,94 A4,4 0 1,0 54,86 Z" />
+    <path
+        android:fillColor="#FF7000FF"
+        android:pathData="M14,54 A4,4 0 1,0 22,54 A4,4 0 1,0 14,54 Z" />
+</vector>
+
