@@ -49,10 +49,12 @@ object SensoryAudioEngine {
 
                 audioTrack.write(buffer, 0, buffer.size)
                 audioTrack.play()
-                // Let track play out
-                Thread.sleep(durationMs.toLong() + 50)
-                audioTrack.stop()
-                audioTrack.release()
+                // Let track play out asynchronously without blocking thread
+                kotlinx.coroutines.delay(durationMs.toLong() + 30)
+                try {
+                    audioTrack.stop()
+                    audioTrack.release()
+                } catch (_: Exception) {}
             } catch (_: Exception) {
                 // Audio synthesis fallback silently ignored on headless environments
             }
