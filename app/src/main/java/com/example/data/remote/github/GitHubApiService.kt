@@ -3,6 +3,7 @@ package com.example.data.remote.github
 import com.example.data.model.github.GitHubCommitDto
 import com.example.data.model.github.GitHubContributorDto
 import com.example.data.model.github.GitHubRepoDto
+import com.example.data.model.github.GitHubUserProfileDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -10,7 +11,8 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Retrofit Service interface for fetching repository statistics and commit history from the GitHub REST API.
+ * Retrofit Service interface for fetching repository statistics, commit history,
+ * and user profiles from the GitHub REST API.
  */
 interface GitHubApiService {
 
@@ -50,6 +52,25 @@ interface GitHubApiService {
         @Query("per_page") perPage: Int = 10,
         @Header("Authorization") authHeader: String? = null
     ): Response<List<GitHubContributorDto>>
+
+    /**
+     * Fetch public user profile by username.
+     * Example: GET https://api.github.com/users/dextervann1
+     */
+    @GET("users/{username}")
+    suspend fun getUserProfile(
+        @Path("username") username: String,
+        @Header("Authorization") authHeader: String? = null
+    ): Response<GitHubUserProfileDto>
+
+    /**
+     * Fetch authenticated user profile using token.
+     * Example: GET https://api.github.com/user
+     */
+    @GET("user")
+    suspend fun getAuthenticatedUser(
+        @Header("Authorization") authHeader: String
+    ): Response<GitHubUserProfileDto>
 
     /**
      * Fetch repositories for a specific user or organization.

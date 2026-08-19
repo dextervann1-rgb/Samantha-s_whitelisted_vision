@@ -333,6 +333,14 @@ fun FusionHubScreen(
                 }
             }
         }
+
+        item {
+            LegalFooter(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
     }
 }
 
@@ -442,6 +450,9 @@ fun HeroBrandingHeader(modifier: Modifier = Modifier) {
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            LegalFooter(compact = true)
         }
     }
 }

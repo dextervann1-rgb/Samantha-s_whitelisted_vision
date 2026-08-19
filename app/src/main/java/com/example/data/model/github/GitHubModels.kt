@@ -63,6 +63,51 @@ data class GitHubContributorDto(
 )
 
 /**
+ * Data Transfer Object for GitHub User Profile fetched via REST API
+ */
+data class GitHubUserProfileDto(
+    @Json(name = "id") val id: Long,
+    @Json(name = "login") val login: String,
+    @Json(name = "name") val name: String? = null,
+    @Json(name = "avatar_url") val avatarUrl: String? = null,
+    @Json(name = "html_url") val htmlUrl: String,
+    @Json(name = "company") val company: String? = null,
+    @Json(name = "blog") val blog: String? = null,
+    @Json(name = "location") val location: String? = null,
+    @Json(name = "email") val email: String? = null,
+    @Json(name = "bio") val bio: String? = null,
+    @Json(name = "twitter_username") val twitterUsername: String? = null,
+    @Json(name = "public_repos") val publicRepos: Int = 0,
+    @Json(name = "public_gists") val publicGists: Int = 0,
+    @Json(name = "followers") val followers: Int = 0,
+    @Json(name = "following") val following: Int = 0,
+    @Json(name = "created_at") val createdAt: String? = null,
+    @Json(name = "updated_at") val updatedAt: String? = null
+)
+
+/**
+ * Clean domain model for GitHub User Profile
+ */
+data class GitHubUserProfile(
+    val id: Long,
+    val login: String,
+    val name: String,
+    val avatarUrl: String?,
+    val htmlUrl: String,
+    val company: String?,
+    val blog: String?,
+    val location: String?,
+    val email: String?,
+    val bio: String,
+    val twitterUsername: String?,
+    val publicRepos: Int,
+    val publicGists: Int,
+    val followers: Int,
+    val following: Int,
+    val memberSince: String
+)
+
+/**
  * Domain-level model aggregating repository statistics and recent commit history
  */
 data class GitHubRepoStats(

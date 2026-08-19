@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.audio.SensoryAudioEngine
 import com.example.ui.components.CodeSnippetViewer
+import com.example.ui.components.LegalFooter
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.*
 import kotlin.math.cos
@@ -908,6 +909,14 @@ export function hostSplit({ salePrice, ownerType }) {
                     )
                 }
             }
+        }
+
+        item {
+            LegalFooter(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 

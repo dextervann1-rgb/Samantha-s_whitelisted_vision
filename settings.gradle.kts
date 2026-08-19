@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Samantha's ScalenStack"
+rootProject.name = "StacknScale ai studios"
 
 include(":app")

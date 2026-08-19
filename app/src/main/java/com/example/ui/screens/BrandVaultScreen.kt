@@ -27,6 +27,7 @@ import com.example.data.model.Totem
 import com.example.ui.components.BadgeVariant
 import com.example.ui.components.CodeSnippetViewer
 import com.example.ui.components.DV1BrandBadge
+import com.example.ui.components.LegalFooter
 import com.example.ui.theme.*
 
 @Composable
@@ -530,7 +531,13 @@ def get_brand():
 - 🦄 Unicorn = Signal / Purity
 - 🧜 Mermaid = Amphibious Interface"""
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                LegalFooter(modifier = Modifier.padding(top = 8.dp))
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

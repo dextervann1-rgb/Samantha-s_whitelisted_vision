@@ -65,31 +65,42 @@ fun MuseFusionApp(
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            BaseLogo(size = 20.dp)
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "SCALEN",
+                                text = "STACKNSCALE",
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Black,
                                 fontFamily = FontFamily.Monospace,
-                                fontSize = 17.sp
+                                fontSize = 15.sp
                             )
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "STACK",
+                                text = "AI",
                                 color = MuseCyan,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontFamily = FontFamily.Monospace,
-                                fontSize = 17.sp
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "STUDIOS",
+                                color = GoldAccent,
+                                fontWeight = FontWeight.Black,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 13.sp
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(GoldAccent)
-                                    .padding(horizontal = 5.dp, vertical = 2.dp)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = "VFV",
                                     color = Color.Black,
-                                    fontSize = 9.sp,
+                                    fontSize = 8.sp,
                                     fontWeight = FontWeight.Black,
                                     fontFamily = FontFamily.Monospace
                                 )
@@ -132,6 +143,9 @@ fun MuseFusionApp(
                     currentNetwork = currentNetwork,
                     onSwitchNetwork = { viewModel.setNetwork(it) }
                 )
+
+                // Basescan.org and GitHub Quick Links
+                QuickLinkHeaderBar()
             }
         },
         bottomBar = {

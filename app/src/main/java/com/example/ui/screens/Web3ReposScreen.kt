@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.sp
 import com.example.audio.SensoryAudioEngine
 import com.example.data.model.Totem
 import com.example.data.model.Web3Repo
-import com.example.ui.components.CodeSnippetViewer
-import com.example.ui.components.TotemSelectorBar
+import com.example.data.model.github.*
+import com.example.ui.components.*
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MuseFusionViewModel
 
@@ -45,10 +45,15 @@ fun Web3ReposScreen(
 
     // GitHub Live API Fetcher States
     val liveGitHubStats by viewModel.liveGitHubStats.collectAsState()
+    val liveGitHubUserProfile by viewModel.liveGitHubUserProfile.collectAsState()
     val isFetchingGitHub by viewModel.isFetchingGitHub.collectAsState()
+    val isFetchingUserProfile by viewModel.isFetchingUserProfile.collectAsState()
     val gitHubError by viewModel.gitHubError.collectAsState()
+    val userProfileError by viewModel.userProfileError.collectAsState()
     var gitOwnerInput by remember { mutableStateOf("ethereum") }
     var gitRepoInput by remember { mutableStateOf("solidity") }
+    var gitUserInput by remember { mutableStateOf("dextervann1") }
+    var explorerMode by remember { mutableIntStateOf(0) } // 0: Repos, 1: User Profile
     var showGitHubExplorer by remember { mutableStateOf(false) }
 
     val filteredRepos = remember(repos, selectedTotem, searchQuery) {
@@ -133,6 +138,25 @@ fun Web3ReposScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    // Base L2 & GitHub Quick Telemetry Links
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        BasescanLinkChip(
+                            url = "https://basescan.org",
+                            label = "Base Explorer (basescan.org)",
+                            modifier = Modifier.weight(1f)
+                        )
+                        GitHubLinkChip(
+                            url = "https://github.com/dextervann1",
+                            label = "dextervann1",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     // Toggle Live GitHub Explorer
                     Row(
                         modifier = Modifier
@@ -180,198 +204,350 @@ fun Web3ReposScreen(
                             )
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "RETROFIT GITHUB DATA SERVICE",
+                                        color = MuseCyan,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        listOf("Repositories" to 0, "User Profile" to 1).forEach { (label, mode) ->
+                                            val isSel = explorerMode == mode
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(if (isSel) MuseCyan.copy(alpha = 0.25f) else MuseDarkSurfaceElevated)
+                                                    .clickable {
+                                                        explorerMode = mode
+                                                        SensoryAudioEngine.playTone(550f + mode * 100, 30, 0.3f)
+                                                    }
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    text = label,
+                                                    color = if (isSel) MuseCyan else TextMuted,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
                                 Text(
-                                    text = "FETCH REMOTE GITHUB STATS & COMMITS",
-                                    color = MuseCyan,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                                Text(
-                                    text = "Retrofit service client querying api.github.com for repository telemetry & recent commits.",
+                                    text = if (explorerMode == 0)
+                                        "Querying api.github.com for repository stats, metrics, and commit telemetry."
+                                    else
+                                        "Querying api.github.com for developer profiles, bios, follower metrics, and repositories.",
                                     color = TextSecondary,
                                     fontSize = 11.sp,
                                     modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
                                 )
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = gitOwnerInput,
-                                        onValueChange = { gitOwnerInput = it },
-                                        label = { Text("Owner (e.g. ethereum)", fontSize = 10.sp) },
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                                    )
-                                    OutlinedTextField(
-                                        value = gitRepoInput,
-                                        onValueChange = { gitRepoInput = it },
-                                        label = { Text("Repo (e.g. solidity)", fontSize = 10.sp) },
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Button(
-                                    onClick = {
-                                        if (gitOwnerInput.isNotBlank() && gitRepoInput.isNotBlank()) {
-                                            viewModel.fetchLiveGitHubStats(gitOwnerInput, gitRepoInput)
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth().height(40.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MuseCyan),
-                                    shape = RoundedCornerShape(8.dp),
-                                    enabled = !isFetchingGitHub
-                                ) {
-                                    if (isFetchingGitHub) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(18.dp),
-                                            color = Color.Black,
-                                            strokeWidth = 2.dp
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Querying GitHub API...", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    } else {
-                                        Icon(Icons.Default.CloudDownload, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Fetch Stats & Commit History", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-
-                                gitHubError?.let { err ->
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "⚠️ $err",
-                                        color = MuseRed,
-                                        fontSize = 11.sp,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                }
-
-                                liveGitHubStats?.let { stats ->
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    // Repo Metrics Box
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(MuseDarkSurfaceElevated)
-                                            .border(1.dp, MuseBorder, RoundedCornerShape(8.dp))
-                                            .padding(12.dp)
+                                if (explorerMode == 0) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Column {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = stats.fullName,
-                                                    color = TextPrimary,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 13.sp,
-                                                    fontFamily = FontFamily.Monospace
-                                                )
-                                                Text(
-                                                    text = stats.language,
-                                                    color = GoldAccent,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
+                                        OutlinedTextField(
+                                            value = gitOwnerInput,
+                                            onValueChange = { gitOwnerInput = it },
+                                            label = { Text("Owner (e.g. ethereum)", fontSize = 10.sp) },
+                                            singleLine = true,
+                                            modifier = Modifier.weight(1f),
+                                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                                        )
+                                        OutlinedTextField(
+                                            value = gitRepoInput,
+                                            onValueChange = { gitRepoInput = it },
+                                            label = { Text("Repo (e.g. solidity)", fontSize = 10.sp) },
+                                            singleLine = true,
+                                            modifier = Modifier.weight(1f),
+                                            textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                                        )
+                                    }
 
-                                            Text(
-                                                text = stats.description,
-                                                color = TextSecondary,
-                                                fontSize = 11.sp,
-                                                modifier = Modifier.padding(vertical = 4.dp)
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Button(
+                                        onClick = {
+                                            if (gitOwnerInput.isNotBlank() && gitRepoInput.isNotBlank()) {
+                                                viewModel.fetchLiveGitHubStats(gitOwnerInput, gitRepoInput)
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MuseCyan),
+                                        shape = RoundedCornerShape(8.dp),
+                                        enabled = !isFetchingGitHub
+                                    ) {
+                                        if (isFetchingGitHub) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                color = Color.Black,
+                                                strokeWidth = 2.dp
                                             )
-
-                                            // Quick Stats Row
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(top = 6.dp),
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                listOf(
-                                                    "⭐ ${stats.stars}" to "Stars",
-                                                    "🍴 ${stats.forks}" to "Forks",
-                                                    "👁️ ${stats.watchers}" to "Watchers",
-                                                    "❗ ${stats.openIssues}" to "Issues"
-                                                ).forEach { (value, label) ->
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .weight(1f)
-                                                            .clip(RoundedCornerShape(6.dp))
-                                                            .background(MuseDarkBg)
-                                                            .padding(vertical = 4.dp),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                            Text(value, color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                                            Text(label, color = TextMuted, fontSize = 8.sp)
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Querying GitHub API...", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        } else {
+                                            Icon(Icons.Default.CloudDownload, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Fetch Stats & Commit History", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                         }
                                     }
 
-                                    // Recent Commits List
-                                    if (stats.recentCommits.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(10.dp))
+                                    gitHubError?.let { err ->
+                                        Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = "RECENT COMMITS (${stats.recentCommits.size})",
-                                            color = MuseGreen,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            text = "⚠️ $err",
+                                            color = MuseRed,
+                                            fontSize = 11.sp,
                                             fontFamily = FontFamily.Monospace
                                         )
-                                        Spacer(modifier = Modifier.height(4.dp))
+                                    }
 
-                                        stats.recentCommits.take(5).forEach { commit ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 2.dp)
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(MuseDarkBg)
-                                                    .border(1.dp, MuseBorder, RoundedCornerShape(6.dp))
-                                                    .padding(8.dp)
-                                            ) {
+                                    liveGitHubStats?.let { stats ->
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        // Repo Metrics Box
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MuseDarkSurfaceElevated)
+                                                .border(1.dp, MuseBorder, RoundedCornerShape(8.dp))
+                                                .padding(12.dp)
+                                        ) {
+                                            Column {
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.SpaceBetween,
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Column(modifier = Modifier.weight(1f)) {
-                                                        Text(
-                                                            text = commit.message,
-                                                            color = TextPrimary,
-                                                            fontSize = 11.sp,
-                                                            maxLines = 1
-                                                        )
-                                                        Text(
-                                                            text = "by ${commit.authorName} • ${commit.date}",
-                                                            color = TextMuted,
-                                                            fontSize = 9.sp
-                                                        )
-                                                    }
-                                                    Spacer(modifier = Modifier.width(6.dp))
                                                     Text(
-                                                        text = commit.shortSha,
-                                                        color = MuseCyan,
+                                                        text = stats.fullName,
+                                                        color = TextPrimary,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.sp,
+                                                        fontFamily = FontFamily.Monospace
+                                                    )
+                                                    Text(
+                                                        text = stats.language,
+                                                        color = GoldAccent,
                                                         fontSize = 10.sp,
-                                                        fontFamily = FontFamily.Monospace,
                                                         fontWeight = FontWeight.Bold
                                                     )
+                                                }
+
+                                                Text(
+                                                    text = stats.description,
+                                                    color = TextSecondary,
+                                                    fontSize = 11.sp,
+                                                    modifier = Modifier.padding(vertical = 4.dp)
+                                                )
+
+                                                // Quick Stats Row
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(top = 6.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    listOf(
+                                                        "⭐ ${stats.stars}" to "Stars",
+                                                        "🍴 ${stats.forks}" to "Forks",
+                                                        "👁️ ${stats.watchers}" to "Watchers",
+                                                        "❗ ${stats.openIssues}" to "Issues"
+                                                    ).forEach { (value, label) ->
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .weight(1f)
+                                                                .clip(RoundedCornerShape(6.dp))
+                                                                .background(MuseDarkBg)
+                                                                .padding(vertical = 4.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                                Text(value, color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                                Text(label, color = TextMuted, fontSize = 8.sp)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Recent Commits List
+                                        if (stats.recentCommits.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            Text(
+                                                text = "RECENT COMMITS (${stats.recentCommits.size})",
+                                                color = MuseGreen,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+
+                                            stats.recentCommits.take(5).forEach { commit ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 2.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(MuseDarkBg)
+                                                    .border(1.dp, MuseBorder, RoundedCornerShape(6.dp))
+                                                    .padding(8.dp)
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(
+                                                                text = commit.message,
+                                                                color = TextPrimary,
+                                                                fontSize = 11.sp,
+                                                                maxLines = 1
+                                                            )
+                                                            Text(
+                                                                text = "by ${commit.authorName} • ${commit.date}",
+                                                                color = TextMuted,
+                                                                fontSize = 9.sp
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Text(
+                                                            text = commit.shortSha,
+                                                            color = MuseCyan,
+                                                            fontSize = 10.sp,
+                                                            fontFamily = FontFamily.Monospace,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // User Profile Explorer
+                                    OutlinedTextField(
+                                        value = gitUserInput,
+                                        onValueChange = { gitUserInput = it },
+                                        label = { Text("GitHub Username (e.g. dextervann1, torvalds)", fontSize = 10.sp) },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textStyle = LocalTextStyle.current.copy(fontSize = 11.sp)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Button(
+                                        onClick = {
+                                            if (gitUserInput.isNotBlank()) {
+                                                viewModel.fetchGitHubUserProfile(gitUserInput)
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(40.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MusePurple),
+                                        shape = RoundedCornerShape(8.dp),
+                                        enabled = !isFetchingUserProfile
+                                    ) {
+                                        if (isFetchingUserProfile) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                color = Color.White,
+                                                strokeWidth = 2.dp
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Fetching Profile...", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        } else {
+                                            Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Fetch User Profile", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    userProfileError?.let { err ->
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "⚠️ $err",
+                                            color = MuseRed,
+                                            fontSize = 11.sp,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                    }
+
+                                    liveGitHubUserProfile?.let { profile ->
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MuseDarkSurfaceElevated)
+                                                .border(1.dp, MusePurple, RoundedCornerShape(8.dp))
+                                                .padding(12.dp)
+                                        ) {
+                                            Column {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column {
+                                                        Text(profile.name, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                                        Text("@${profile.login}", color = MuseCyan, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                                                    }
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(4.dp))
+                                                            .background(MuseGreen.copy(alpha = 0.2f))
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text("Active", color = MuseGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                    }
+                                                }
+
+                                                if (profile.bio.isNotBlank()) {
+                                                    Text(
+                                                        text = profile.bio,
+                                                        color = TextSecondary,
+                                                        fontSize = 11.sp,
+                                                        modifier = Modifier.padding(vertical = 4.dp)
+                                                    )
+                                                }
+
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(top = 6.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    listOf(
+                                                        "📦 ${profile.publicRepos}" to "Repos",
+                                                        "👥 ${profile.followers}" to "Followers",
+                                                        "👣 ${profile.following}" to "Following",
+                                                        "🗓️ ${profile.memberSince}" to "Joined"
+                                                    ).forEach { (value, label) ->
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .weight(1f)
+                                                                .clip(RoundedCornerShape(6.dp))
+                                                                .background(MuseDarkBg)
+                                                                .padding(vertical = 4.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                                Text(value, color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                                                Text(label, color = TextMuted, fontSize = 8.sp)
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -413,6 +589,14 @@ fun Web3ReposScreen(
                         onInspect = { viewModel.inspectingRepo.value = repo }
                     )
                 }
+            }
+
+            item {
+                LegalFooter(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

@@ -173,6 +173,10 @@ fun Web3WalletBar(
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MuseCyan),
                 border = ButtonDefaults.outlinedButtonBorder.copy(brush = Brush.horizontalGradient(listOf(MuseCyan, MuseGreen)))
             ) {
+                if (currentNetwork.contains("Base", ignoreCase = true)) {
+                    BaseLogo(size = 12.dp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
                 Text(currentNetwork, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
             }
@@ -182,9 +186,17 @@ fun Web3WalletBar(
                 onDismissRequest = { isExpanded = false },
                 modifier = Modifier.background(MuseDarkSurface)
             ) {
-                listOf("Ethereum Mainnet", "Arbitrum One", "Base L2", "Solana Devnet", "Polygon PoS").forEach { chain ->
+                listOf("Base L2 (Basescan)", "Ethereum Mainnet", "Arbitrum One", "Solana Devnet", "Polygon PoS").forEach { chain ->
                     DropdownMenuItem(
-                        text = { Text(chain, color = TextPrimary, fontSize = 13.sp) },
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (chain.contains("Base")) {
+                                    BaseLogo(size = 14.dp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+                                Text(chain, color = TextPrimary, fontSize = 13.sp)
+                            }
+                        },
                         onClick = {
                             onSwitchNetwork(chain)
                             isExpanded = false

@@ -40,15 +40,23 @@ object SensoryAudioEngine {
                     .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                     .build()
 
+                val minBufSize = AudioTrack.getMinBufferSize(
+                    SAMPLE_RATE,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+                )
+                val bufferSize = maxOf(minBufSize, buffer.size * 2)
+
                 val audioTrack = AudioTrack.Builder()
                     .setAudioAttributes(audioAttributes)
                     .setAudioFormat(audioFormat)
-                    .setBufferSizeInBytes(buffer.size * 2)
-                    .setTransferMode(AudioTrack.MODE_STATIC)
+                    .setBufferSizeInBytes(bufferSize)
+                    .setTransferMode(AudioTrack.MODE_STREAM)
                     .build()
 
-                audioTrack.write(buffer, 0, buffer.size)
                 audioTrack.play()
+                audioTrack.write(buffer, 0, buffer.size)
+
                 // Let track play out asynchronously without blocking thread
                 kotlinx.coroutines.delay(durationMs.toLong() + 30)
                 try {

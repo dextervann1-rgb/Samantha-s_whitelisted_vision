@@ -9,13 +9,12 @@ import com.example.data.model.FusedCapsule
 import com.example.data.model.RealioAsset
 import com.example.data.model.Totem
 import com.example.data.model.Web3Repo
-import com.example.data.model.github.GitHubRepoStats
-import com.example.data.model.zk.CompliancePolicySection
-import com.example.data.model.zk.ProjectAppraisalReport
-import com.example.data.model.zk.ZkCircuitAttribute
-import com.example.data.model.zk.ZkProofRecord
+import com.example.data.model.github.*
+import com.example.data.model.zk.*
 import com.example.data.repository.GitHubRepository
 import com.example.data.repository.ZkProofEngine
+import com.example.data.service.ZkProofDataService
+import com.example.data.service.ZkProofDataServiceImpl
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -214,8 +213,11 @@ class MuseFusionViewModel(application: Application) : AndroidViewModel(applicati
     // GitHub API Integration State
     private val gitHubRepository = GitHubRepository()
     val liveGitHubStats = MutableStateFlow<GitHubRepoStats?>(null)
+    val liveGitHubUserProfile = MutableStateFlow<GitHubUserProfile?>(null)
     val isFetchingGitHub = MutableStateFlow(false)
+    val isFetchingUserProfile = MutableStateFlow(false)
     val gitHubError = MutableStateFlow<String?>(null)
+    val userProfileError = MutableStateFlow<String?>(null)
 
     // Samantha's ScalenStack ZK & Compliance State
     val appraisalReport = ZkProofEngine.appraisalReport
@@ -225,6 +227,36 @@ class MuseFusionViewModel(application: Application) : AndroidViewModel(applicati
     val selectedZkCircuit = MutableStateFlow(ZkProofEngine.availableCircuits.first())
     val isGeneratingZk = MutableStateFlow(false)
     val latestZkProof = MutableStateFlow<ZkProofRecord?>(null)
+
+    // ZkProofDataService: Privacy Attributes, On-Chain Verifier & MCP / V€€³ OG8OH OS Merge
+    private val zkProofDataService: ZkProofDataService = ZkProofDataServiceImpl()
+    val privacyAttributes = MutableStateFlow<List<PrivacyPreservingAttribute>>(zkProofDataService.getPreloadedAttributes())
+    val selectedAttributeType = MutableStateFlow(AttributeType.SOLVENCY_RANGE)
+    val onChainCalldataPayload = MutableStateFlow<OnChainProofVerificationPayload?>(null)
+    val isOnChainVerifying = MutableStateFlow(false)
+
+    val mcpTools: List<McpToolDefinition> = zkProofDataService.getAvailableMcpTools()
+    val mcpExecutionLogs = MutableStateFlow<List<McpToolExecutionResult>>(emptyList())
+    val isExecutingMcp = MutableStateFlow(false)
+
+    val osMergeHistory = MutableStateFlow<List<V3Og8ohOsMergeRecord>>(
+        listOf(
+            V3Og8ohOsMergeRecord(
+                mergeId = "merge-v3-init-01",
+                sourceRepository = "dextervann1-rgb/scalenstack",
+                targetBranch = "v3-og8oh-main",
+                commitSha = "0x7f4e91a2b8c3d05e6f1a8b2c4d9e0f3a7c5b1d9e",
+                author = "Dexter Lamar Vann (dextervann1-rgb)",
+                zkAttestationHash = "0x89e2c4b01a7f5d6e3c9a1b0d2f4e6a8c0b2d4f6a",
+                mergeStatus = "COMMITTED_AND_VERIFIED",
+                kernelBuildVersion = "V€€³-OG8OH-v4.9.2-ScalenStack",
+                securityAuditScore = 9.8,
+                filesMergedCount = 42
+            )
+        )
+    )
+    val isMergingOs = MutableStateFlow(false)
+    val latestOsMergeRecord = MutableStateFlow<V3Og8ohOsMergeRecord?>(null)
 
     init {
         // Auto-select first items for easy preview
@@ -482,6 +514,29 @@ class MuseFusionViewModel(application: Application) : AndroidViewModel(applicati
         gitHubError.value = null
     }
 
+    fun fetchGitHubUserProfile(username: String, token: String? = null) {
+        viewModelScope.launch {
+            isFetchingUserProfile.value = true
+            userProfileError.value = null
+            SensoryAudioEngine.playTone(540f, 40, 0.3f)
+            val result = gitHubRepository.fetchUserProfile(username.trim(), token?.trim())
+            result.onSuccess { profile ->
+                liveGitHubUserProfile.value = profile
+                isFetchingUserProfile.value = false
+                SensoryAudioEngine.playTone(820f, 60, 0.4f)
+            }.onFailure { err ->
+                userProfileError.value = err.message ?: "Failed to fetch user profile"
+                isFetchingUserProfile.value = false
+                SensoryAudioEngine.playTone(320f, 120, 0.4f)
+            }
+        }
+    }
+
+    fun clearUserProfile() {
+        liveGitHubUserProfile.value = null
+        userProfileError.value = null
+    }
+
     fun selectZkCircuit(circuit: ZkCircuitAttribute) {
         selectedZkCircuit.value = circuit
         SensoryAudioEngine.playTone(640f, 40, 0.3f)
@@ -497,6 +552,58 @@ class MuseFusionViewModel(application: Application) : AndroidViewModel(applicati
             zkProofHistory.value = listOf(proof) + zkProofHistory.value
             isGeneratingZk.value = false
             SensoryAudioEngine.playTone(920f, 80, 0.4f)
+        }
+    }
+
+    fun selectAttributeType(type: AttributeType) {
+        selectedAttributeType.value = type
+        SensoryAudioEngine.playTone(560f, 30, 0.3f)
+    }
+
+    fun generatePrivacyAttributeProof(type: AttributeType, rawPrivateValue: String, predicate: String) {
+        viewModelScope.launch {
+            isGeneratingZk.value = true
+            SensoryAudioEngine.playTone(440f, 50, 0.3f)
+            val (attr, proof) = zkProofDataService.generateAttributeProof(type, rawPrivateValue, predicate)
+            privacyAttributes.value = listOf(attr) + privacyAttributes.value
+            latestZkProof.value = proof
+            zkProofHistory.value = listOf(proof) + zkProofHistory.value
+            isGeneratingZk.value = false
+            SensoryAudioEngine.playTone(880f, 70, 0.4f)
+        }
+    }
+
+    fun generateOnChainCalldata(proof: ZkProofRecord) {
+        viewModelScope.launch {
+            isOnChainVerifying.value = true
+            SensoryAudioEngine.playTone(620f, 40, 0.3f)
+            val payload = zkProofDataService.generateOnChainVerifierCalldata(proof)
+            onChainCalldataPayload.value = payload
+            isOnChainVerifying.value = false
+            SensoryAudioEngine.playTone(960f, 80, 0.4f)
+        }
+    }
+
+    fun executeMcpTool(toolName: String, parameters: Map<String, String>) {
+        viewModelScope.launch {
+            isExecutingMcp.value = true
+            SensoryAudioEngine.playTone(500f, 40, 0.3f)
+            val result = zkProofDataService.executeMcpTool(toolName, parameters)
+            mcpExecutionLogs.value = listOf(result) + mcpExecutionLogs.value
+            isExecutingMcp.value = false
+            SensoryAudioEngine.playTone(840f, 60, 0.4f)
+        }
+    }
+
+    fun mergeV3Og8ohOs(sourceRepo: String, branch: String = "v3-og8oh-main", commitSha: String = "") {
+        viewModelScope.launch {
+            isMergingOs.value = true
+            SensoryAudioEngine.playTone(480f, 60, 0.3f)
+            val record = zkProofDataService.mergeV3Og8ohOs(sourceRepo, branch, commitSha)
+            latestOsMergeRecord.value = record
+            osMergeHistory.value = listOf(record) + osMergeHistory.value
+            isMergingOs.value = false
+            SensoryAudioEngine.playTone(1020f, 100, 0.5f)
         }
     }
 }

@@ -257,6 +257,14 @@ fun RealioLabScreen(
                     onSelectForFusion = { viewModel.selectAssetForFusion(asset) }
                 )
             }
+
+            item {
+                LegalFooter(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
     }
 

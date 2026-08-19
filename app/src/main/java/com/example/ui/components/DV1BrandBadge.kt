@@ -228,6 +228,14 @@ fun DV1BrandBadge(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 1.sp
             )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Created by Dexter Lamar Vann all rights reserved Vann Family Ventures LLC",
+                color = TextMuted,
+                fontSize = 8.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Normal
+            )
         }
     }
 }

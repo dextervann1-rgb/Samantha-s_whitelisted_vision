@@ -49,6 +49,7 @@ fun WaveformOscillatorCanvas(
 
     var touchModX by remember { mutableFloatStateOf(1.0f) }
     var touchModY by remember { mutableFloatStateOf(1.0f) }
+    var lastAudioPlayTime by remember { mutableLongStateOf(0L) }
 
     Box(
         modifier = modifier
@@ -60,7 +61,11 @@ fun WaveformOscillatorCanvas(
                     detectDragGestures { change, _ ->
                         touchModX = (change.position.x / size.width).coerceIn(0.2f, 3.0f)
                         touchModY = (change.position.y / size.height).coerceIn(0.2f, 2.5f)
-                        SensoryAudioEngine.playTone((baseFrequency * touchModX).coerceIn(120f, 1200f), 60, 0.3f)
+                        val now = System.currentTimeMillis()
+                        if (now - lastAudioPlayTime > 80) {
+                            lastAudioPlayTime = now
+                            SensoryAudioEngine.playTone((baseFrequency * touchModX).coerceIn(120f, 1200f), 60, 0.3f)
+                        }
                     }
                 }
             }
