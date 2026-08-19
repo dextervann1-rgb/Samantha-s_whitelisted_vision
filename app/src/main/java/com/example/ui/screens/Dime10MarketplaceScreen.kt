@@ -1037,6 +1037,10 @@ fun SevenDimensionRadarCanvas(
     scoresB: Map<String, Int>,
     modifier: Modifier = Modifier
 ) {
+    val gridPath = remember { Path() }
+    val pathA = remember { Path() }
+    val pathB = remember { Path() }
+
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val maxRadius = (size.minDimension / 2f) - 24.dp.toPx()
@@ -1046,7 +1050,7 @@ fun SevenDimensionRadarCanvas(
         val levels = 4
         for (lvl in 1..levels) {
             val r = maxRadius * (lvl.toFloat() / levels)
-            val gridPath = Path()
+            gridPath.reset()
             for (i in 0 until numPoints) {
                 val angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2)
                 val x = center.x + (r * cos(angle)).toFloat()
@@ -1071,7 +1075,7 @@ fun SevenDimensionRadarCanvas(
         }
 
         // Draw Polygon for Project A (Cyan)
-        val pathA = Path()
+        pathA.reset()
         for (i in 0 until numPoints) {
             val dimId = radarDimensions[i].id
             val score = (scoresA[dimId] ?: 70).coerceIn(20, 100)
@@ -1086,7 +1090,7 @@ fun SevenDimensionRadarCanvas(
         drawPath(pathA, color = MuseCyan, style = Stroke(width = 2.dp.toPx()))
 
         // Draw Polygon for Project B (Red)
-        val pathB = Path()
+        pathB.reset()
         for (i in 0 until numPoints) {
             val dimId = radarDimensions[i].id
             val score = (scoresB[dimId] ?: 70).coerceIn(20, 100)

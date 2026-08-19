@@ -51,6 +51,9 @@ fun WaveformOscillatorCanvas(
     var touchModY by remember { mutableFloatStateOf(1.0f) }
     var lastAudioPlayTime by remember { mutableLongStateOf(0L) }
 
+    val path1 = remember { Path() }
+    val path2 = remember { Path() }
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -108,9 +111,9 @@ fun WaveformOscillatorCanvas(
                 gy += gridStep
             }
 
-            // Primary Waveform
-            val path1 = Path()
-            val path2 = Path()
+            // Primary Waveform - Reset cached paths
+            path1.reset()
+            path2.reset()
             val pointsCount = 100
             val dx = width / pointsCount
 
